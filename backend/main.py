@@ -64,9 +64,9 @@ def generate_plan(plan_data: FinancialPlanInput):
         recommendations.append("Your expenses exceed income. Reduce discretionary spending immediately.")
     if monthly_savings > 0 and monthly_savings < total_monthly_required:
         recommendations.append("Your current savings are not enough to meet all goals. Either reduce expenses or prioritize high-priority goals.")
-    if total_liabilities > total_assets:
+    if plan_data.total_liabilities > plan_data.total_assets:
         recommendations.append("Your liabilities exceed your assets. Focus on debt repayment before aggressive investing.")
-    if monthly_savings >= total monthly_required:
+    if monthly_savings >= total_monthly_required:
         recommendations.append("You are on track to meet your financial goals with your current savings rate.")
     recommendations.append("Maintain an emergency fund of 3-6 months expenses.")
     
