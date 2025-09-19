@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Planner Client</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 p-8">
+    <div class="max-w-xl mx-auto p-6 bg-white rounded-xl shadow-lg">
+        <h1 class="text-3xl font-bold mb-6 text-center text-slate-800">Financial Data Input</h1>
+
+        <form id="financial-form" class="space-y-4">
+            <!-- Main Financial Inputs -->
+            <div>
+                <label for="monthly_net_income" class="block text-sm font-medium text-slate-700">Monthly Net Income</label>
+                <input type="number" id="monthly_net_income" name="monthly_net_income" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm" required min="0">
+            </div>
+            <div>
+                <label for="monthly_expenses" class="block text-sm font-medium text-slate-700">Monthly Expenses</label>
+                <input type="number" id="monthly_expenses" name="monthly_expenses" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm" required min="0">
+            </div>
+            <div>
+                <label for="total_assets" class="block text-sm font-medium text-slate-700">Total Assets</label>
+                <input type="number" id="total_assets" name="total_assets" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm" required min="0">
+            </div>
+            <div>
+                <label for="total_liabilities" class="block text-sm font-medium text-slate-700">Total Liabilities</label>
+                <input type="number" id="total_liabilities" name="total_liabilities" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm" required min="0">
+            </div>
+
+            <!-- Goals Section -->
+            <div class="space-y-4">
+                <h2 class="text-xl font-semibold text-slate-800">Financial Goals</h2>
+                <div id="goals-container" class="space-y-4">
+                    <!-- Goal fields will be added here dynamically -->
+                </div>
+                <button type="button" id="add-goal-btn" class="w-full p-2 bg-slate-200 text-slate-700 rounded-md shadow-sm hover:bg-slate-300 transition-colors">Add Goal</button>
+            </div>
+
+            <!-- Risk Profile -->
+            <div>
+                <label for="risk_profile" class="block text-sm font-medium text-slate-700">Risk Profile</label>
+                <select id="risk_profile" name="risk_profile" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm" required>
+                    <option value="" disabled selected>Select a profile</option>
+                    <option value="conservative">Conservative</option>
+                    <option value="moderate">Moderate</option>
+                    <option value="aggressive">Aggressive</option>
+                </select>
+            </div>
+
+            <button type="submit" class="w-full p-3 bg-slate-800 text-white rounded-md shadow-lg font-bold hover:bg-slate-700 transition-colors">Generate Plan</button>
+        </form>
+
+        <!-- Response Display Area -->
+        <div id="response-container" class="mt-8">
+            <h2 class="text-xl font-semibold text-slate-800 mb-2">API Response:</h2>
+            <pre id="api-response" class="text-sm"></pre>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('financial-form');
+            const goalsContainer = document.getElementById('goals-container');
+            const addGoalBtn = document.getElementById('add-goal-btn');
+            const apiResponseElement = document.getElementById('api-response');
+
+            const addGoalFields = () => {
+                const goalIndex = goalsContainer.children.length;
+                const goalDiv = document.createElement('div');
+                goalDiv.className = 'goal-item p-4 border border-slate-200 rounded-md space-y-2';
+                goalDiv.innerHTML = `
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700">Goal Name</label>
+                        <input type="text" name="goal_name_${goalIndex}" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700">Target Amount</label>
+                        <input type="number" name="target_amount_${goalIndex}" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm" required min="0">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700">Target Date</label>
+                        <input type="date" name="target_date_${goalIndex}" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm" required>
+                    </div>
+                `;
+                goalsContainer.appendChild(goalDiv);
+            };
+
+            // Add an initial goal field on page load
+            addGoalFields();
+
+            addGoalBtn.addEventListener('click', addGoalFields);
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                // Clear previous response
+                apiResponseElement.textContent = 'Loading...';
+
+                const formData = new FormData(form);
+                const data = {
+                    monthly_net_income: parseFloat(formData.get('monthly_net_income')),
+                    monthly_expenses: parseFloat(formData.get('monthly_expenses')),
+                    total_assets: parseFloat(formData.get('total_assets')),
+                    total_liabilities: parseFloat(formData.get('total_liabilities')),
+                    risk_profile: formData.get('risk_profile'),
+                    goals: []
+                };
+
+                // Collect dynamic goal data
+                const goalItems = goalsContainer.querySelectorAll('.goal-item');
+                goalItems.forEach((goalItem, index) => {
+                    const goalName = goalItem.querySelector(`[name="goal_name_${index}"]`).value;
+                    const targetAmount = parseFloat(goalItem.querySelector(`[name="target_amount_${index}"]`).value);
+                    const targetDate = goalItem.querySelector(`[name="target_date_${index}"]`).value;
+
+                    if (goalName && !isNaN(targetAmount) && targetDate) {
+                        data.goals.push({
+                            goal_name: goalName,
+                            target_amount: targetAmount,
+                            target_date: targetDate
+                        });
+                    }
+                });
+
+                try {
+                    const response = await fetch('http://127.0.0.1:8000/generate-plan', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data),
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    apiResponseElement.textContent = JSON.stringify(result, null, 2);
+                } catch (error) {
+                    apiResponseElement.textContent = `Error: ${error.message}`;
+                    console.error('Fetch error:', error);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
