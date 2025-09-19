@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel, Field, conlist
 from typing import Literal
 from datetime import date
+from fastapi.middleware.cors import CORSMiddleware
 
 class Goal(BaseModel):
     goal_name: str = Field(..., description="Name of the goal (e.g., 'Retirement', 'Home Down Payment').")
@@ -17,6 +18,13 @@ class FinancialPlanInput(BaseModel):
     risk_profile: Literal["conservative", "moderate", "aggressive"] = Field(..., description="The user's general risk tolerance.")
 
 app = FastAPI(title = "Agentic Financial Planner")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, restrict this
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.post("/generate-plan")
 def generate_plan(plan_data: FinancialPlanInput):
