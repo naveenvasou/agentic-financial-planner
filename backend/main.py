@@ -30,9 +30,10 @@ app.add_middleware(
 def generate_plan(plan_data: FinancialPlanInput):
     
     monthly_savings = plan_data.monthly_net_income - plan_data.monthly_expenses
+    remaining_savings = monthly_savings
     processed_goals = []
     today = date.today()
-    
+    total_monthly_required = 0
     for goal in plan_data.goals:
         # Calculate months remaining
         # We'll use a simple approximation for months_until_target
@@ -46,8 +47,9 @@ def generate_plan(plan_data: FinancialPlanInput):
             monthly_required = goal.target_amount / months_until_target
         
         # 3. Flag goal as on_track
-        on_track = monthly_savings >= monthly_required
-        
+        on_track = remaining_savings >= monthly_required
+        remaining_savings -= monthly_required
+        total_monthly_required += monthly_required
         # Create a new object with the original goal data plus calculations
         processed_goal = {
             **goal.dict(),
@@ -55,9 +57,25 @@ def generate_plan(plan_data: FinancialPlanInput):
             "on_track": on_track
         }
         processed_goals.append(processed_goal)
-        
+    
+    recommendations = []
+    
+    if monthly_savings <= 0:
+        recommendations.append("Your expenses exceed income. Reduce discretionary spending immediately.")
+    if monthly_savings > 0 and monthly_savings < total_monthly_required:
+        recommendations.append("Your current savings are not enough to meet all goals. Either reduce expenses or prioritize high-priority goals.")
+    if total_liabilities > total_assets:
+        recommendations.append("Your liabilities exceed your assets. Focus on debt repayment before aggressive investing.")
+    if monthly_savings >= total monthly_required:
+        recommendations.append("You are on track to meet your financial goals with your current savings rate.")
+    recommendations.append("Maintain an emergency fund of 3-6 months expenses.")
+    
     return {
-        "monthly_savings": round(monthly_savings, 2),
+        "cashflow": {
+            "monthly_net_income": plan_data.monthly_net_income,
+            "monthly_expenses": plan_data.monthly_expenses,
+            "monthly_savings": round(monthly_savings, 2)
+        },
         "goals_status": processed_goals,
-        "raw_data": plan_data
+        "recommendations": recommendations
     }
