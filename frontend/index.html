@@ -163,9 +163,9 @@
                 html += `
                     <div class="bg-slate-50 p-4 rounded-md shadow-inner mb-6">
                         <h3 class="text-lg font-bold text-slate-700">Cash Flow</h3>
-                        <p class="text-slate-600">Monthly Net Income: $${result.cashflow.monthly_net_income.toFixed(2)}</p>
-                        <p class="text-slate-600">Monthly Expenses: $${result.cashflow.monthly_expenses.toFixed(2)}</p>
-                        <p class="text-slate-600 font-bold mt-2">Monthly Savings: $${result.cashflow.monthly_savings.toFixed(2)}</p>
+                        <p class="text-slate-600">Monthly Net Income: ₹${result.cashflow.monthly_net_income.toFixed(2)}</p>
+                        <p class="text-slate-600">Monthly Expenses: ₹${result.cashflow.monthly_expenses.toFixed(2)}</p>
+                        <p class="text-slate-600 font-bold mt-2">Monthly Savings: ₹${result.cashflow.monthly_savings.toFixed(2)}</p>
                     </div>
                 `;
 
@@ -179,9 +179,9 @@
                             return `
                                 <div class="p-4 rounded-md shadow-sm mb-2 ${statusColor}">
                                     <p class="font-bold text-lg">${goal.goal_name}</p>
-                                    <p class="text-sm">Target Amount: $${goal.target_amount.toFixed(2)}</p>
+                                    <p class="text-sm">Target Amount: ₹${goal.target_amount.toFixed(2)}</p>
                                     <p class="text-sm">Target Date: ${goal.target_date}</p>
-                                    <p class="text-sm">Monthly Required: $${goal.monthly_required.toFixed(2)}</p>
+                                    <p class="text-sm">Monthly Required: ₹${goal.monthly_required.toFixed(2)}</p>
                                     <div class="font-bold mt-2">${statusText}</div>
                                 </div>
                             `;
