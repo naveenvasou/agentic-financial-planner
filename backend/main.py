@@ -31,7 +31,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.mount("/", StaticFiles(directory="backend", html=True), name="static")
+
 
 @app.post("/generate-plan")
 def generate_plan(plan_data: FinancialPlanInput):
@@ -106,3 +106,5 @@ def generate_plan(plan_data: FinancialPlanInput):
         "goals_status": processed_goals,
         "ai_driven_plan": ai_plan
     }
+    
+app.mount("/", StaticFiles(directory="backend", html=True), name="static")
