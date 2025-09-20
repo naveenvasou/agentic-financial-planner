@@ -5,6 +5,8 @@ from datetime import date
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 from .advisor import generate_ai_plan
+from fastapi.staticfiles import StaticFiles
+
 
 class Goal(BaseModel):
     goal_name: str = Field(..., description="Name of the goal (e.g., 'Retirement', 'Home Down Payment').")
@@ -29,7 +31,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
+app.mount("/", StaticFiles(directory="backend", html=True), name="static")
 
 @app.post("/generate-plan")
 def generate_plan(plan_data: FinancialPlanInput):
