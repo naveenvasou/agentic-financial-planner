@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Planner Client</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 p-4">
+    <div class="max-w-4xl mx-auto p-6 bg-white rounded-xl shadow-lg">
+        <h1 class="text-3xl font-bold mb-6 text-center text-slate-800">AI Financial Planner</h1>
+
+        <form id="financial-form" class="space-y-6">
+            <!-- Main Financial Inputs -->
+            <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                    <label for="monthly_net_income" class="block text-sm font-medium text-slate-700">Monthly Net Income (₹)</label>
+                    <input type="number" id="monthly_net_income" name="monthly_net_income" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm" required min="0" step="0.01">
+                </div>
+                <div>
+                    <label for="monthly_expenses" class="block text-sm font-medium text-slate-700">Monthly Expenses (₹)</label>
+                    <input type="number" id="monthly_expenses" name="monthly_expenses" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm" required min="0" step="0.01">
+                </div>
+                <div>
+                    <label for="total_assets" class="block text-sm font-medium text-slate-700">Total Assets (₹)</label>
+                    <input type="number" id="total_assets" name="total_assets" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm" required min="0" step="0.01">
+                </div>
+                <div>
+                    <label for="total_liabilities" class="block text-sm font-medium text-slate-700">Total Liabilities (₹)</label>
+                    <input type="number" id="total_liabilities" name="total_liabilities" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm" required min="0" step="0.01">
+                </div>
+            </div>
+
+            <!-- Additional Personal Info -->
+            <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                    <label for="employment_status" class="block text-sm font-medium text-slate-700">Employment Status</label>
+                    <select id="employment_status" name="employment_status" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm" required>
+                        <option value="" disabled selected>Select employment status</option>
+                        <option value="employed">Employed</option>
+                        <option value="self-employed">Self-Employed</option>
+                        <option value="student">Student</option>
+                        <option value="unemployed">Unemployed</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="number_of_dependents" class="block text-sm font-medium text-slate-700">Number of Dependents</label>
+                    <input type="number" id="number_of_dependents" name="number_of_dependents" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm" required min="0" value="0">
+                </div>
+            </div>
+
+            <!-- Goals Section -->
+            <div class="space-y-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-semibold text-slate-800">Financial Goals</h2>
+                    <button type="button" id="add-goal-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md shadow-sm hover:bg-blue-700 transition-colors">+ Add Goal</button>
+                </div>
+                <div id="goals-container" class="space-y-4">
+                    <!-- Goal fields will be added here dynamically -->
+                </div>
+            </div>
+
+            <!-- Risk Profile -->
+            <div>
+                <label for="risk_profile" class="block text-sm font-medium text-slate-700">Risk Profile</label>
+                <select id="risk_profile" name="risk_profile" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm" required>
+                    <option value="" disabled selected>Select a profile</option>
+                    <option value="conservative">Conservative (6% expected returns)</option>
+                    <option value="moderate">Moderate (8% expected returns)</option>
+                    <option value="aggressive">Aggressive (10% expected returns)</option>
+                </select>
+            </div>
+
+            <button type="submit" class="w-full p-3 bg-slate-800 text-white rounded-md shadow-lg font-bold hover:bg-slate-700 transition-colors">Generate AI Financial Plan</button>
+        </form>
+
+        <!-- Response Display Area -->
+        <div id="response-container" class="mt-8 hidden">
+            <!-- Response content will be inserted here -->
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('financial-form');
+            const goalsContainer = document.getElementById('goals-container');
+            const addGoalBtn = document.getElementById('add-goal-btn');
+            const responseContainer = document.getElementById('response-container');
+
+            let goalCounter = 0;
+
+            const addGoalFields = () => {
+                const goalDiv = document.createElement('div');
+                goalDiv.className = 'goal-item p-4 border-2 border-slate-200 rounded-md space-y-3 bg-slate-50';
+                goalDiv.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-semibold text-slate-700">Goal ${goalCounter + 1}</h3>
+                        <button type="button" class="remove-goal text-red-600 hover:text-red-800 font-bold">✕ Remove</button>
+                    </div>
+                    <div class="grid md:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">Goal Name</label>
+                            <input type="text" name="goal_name_${goalCounter}" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm" required placeholder="e.g., Emergency Fund">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">Target Amount (₹)</label>
+                            <input type="number" name="target_amount_${goalCounter}" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm" required min="0" step="0.01">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">Target Date</label>
+                            <input type="date" name="target_date_${goalCounter}" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm" required>
+                        </div>
+                    </div>
+                `;
+                
+                // Add remove functionality
+                const removeBtn = goalDiv.querySelector('.remove-goal');
+                removeBtn.addEventListener('click', () => {
+                    goalDiv.remove();
+                });
+                
+                goalsContainer.appendChild(goalDiv);
+                goalCounter++;
+            };
+
+            // Add an initial goal field on page load
+            addGoalFields();
+
+            addGoalBtn.addEventListener('click', addGoalFields);
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                // Show loading
+                responseContainer.innerHTML = '<div class="text-center p-8"><div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800"></div><p class="mt-2 text-slate-600">Generating your AI financial plan...</p></div>';
+                responseContainer.classList.remove('hidden');
+
+                const formData = new FormData(form);
+                const data = {
+                    monthly_net_income: parseFloat(formData.get('monthly_net_income')),
+                    monthly_expenses: parseFloat(formData.get('monthly_expenses')),
+                    total_assets: parseFloat(formData.get('total_assets')),
+                    total_liabilities: parseFloat(formData.get('total_liabilities')),
+                    employment_status: formData.get('employment_status'),
+                    number_of_dependents: parseInt(formData.get('number_of_dependents')),
+                    risk_profile: formData.get('risk_profile'),
+                    goals: []
+                };
+
+                // Collect dynamic goal data
+                const goalItems = goalsContainer.querySelectorAll('.goal-item');
+                goalItems.forEach((goalItem, index) => {
+                    const goalName = goalItem.querySelector(`[name^="goal_name_"]`).value;
+                    const targetAmount = parseFloat(goalItem.querySelector(`[name^="target_amount_"]`).value);
+                    const targetDate = goalItem.querySelector(`[name^="target_date_"]`).value;
+
+                    if (goalName && !isNaN(targetAmount) && targetDate) {
+                        data.goals.push({
+                            goal_name: goalName,
+                            target_amount: targetAmount,
+                            target_date: targetDate
+                        });
+                    }
+                });
+                
+                try {
+                    const response = await fetch('/generate-plan', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data),
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    renderResponse(result);
+                } catch (error) {
+                    responseContainer.innerHTML = `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"><strong>Error:</strong> ${error.message}</div>`;
+                    console.error('Fetch error:', error);
+                }
+            });
+
+            const renderResponse = (result) => {
+                if (!result || !result.financial_summary || !result.goals_status || !result.ai_driven_plan) {
+                    responseContainer.innerHTML = '<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">Error: Invalid response format from API</div>';
+                    return;
+                }
+                
+                let html = '<div class="space-y-6">';
+                
+                // Financial Summary Section
+                html += `
+                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-200">
+                        <h2 class="text-2xl font-bold text-slate-800 mb-4">📊 Financial Summary</h2>
+                        <div class="grid md:grid-cols-3 gap-4">
+                            <div class="text-center p-4 bg-white rounded-md shadow-sm">
+                                <h3 class="text-sm font-semibold text-slate-600 mb-1">Net Worth</h3>
+                                <p class="text-2xl font-bold ${result.financial_summary.net_worth >= 0 ? 'text-green-600' : 'text-red-600'}">₹${result.financial_summary.net_worth.toLocaleString()}</p>
+                            </div>
+                            <div class="text-center p-4 bg-white rounded-md shadow-sm">
+                                <h3 class="text-sm font-semibold text-slate-600 mb-1">Monthly Savings</h3>
+                                <p class="text-2xl font-bold ${result.financial_summary.cashflow.monthly_savings >= 0 ? 'text-green-600' : 'text-red-600'}">₹${result.financial_summary.cashflow.monthly_savings.toLocaleString()}</p>
+                            </div>
+                            <div class="text-center p-4 bg-white rounded-md shadow-sm">
+                                <h3 class="text-sm font-semibold text-slate-600 mb-1">Debt-to-Asset Ratio</h3>
+                                <p class="text-2xl font-bold ${result.financial_summary.debt_to_asset_ratio <= 0.3 ? 'text-green-600' : result.financial_summary.debt_to_asset_ratio <= 0.5 ? 'text-yellow-600' : 'text-red-600'}">${(result.financial_summary.debt_to_asset_ratio * 100).toFixed(1)}%</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Goals Status Section
+                html += `
+                    <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
+                        <h2 class="text-2xl font-bold text-slate-800 mb-4">🎯 Goals Status</h2>
+                        <div class="space-y-4">
+                            ${result.goals_status.map(goal => {
+                                const statusColor = goal.on_track ? 'border-green-400 bg-green-50' : 'border-red-400 bg-red-50';
+                                const statusIcon = goal.on_track ? '✅' : '⚠️';
+                                const statusText = goal.on_track ? 'On Track' : 'Needs Attention';
+                                return `
+                                    <div class="p-4 rounded-md border-2 ${statusColor}">
+                                        <div class="flex justify-between items-start">
+                                            <div>
+                                                <h3 class="font-bold text-lg text-slate-800">${statusIcon} ${goal.goal_name}</h3>
+                                                <p class="text-sm text-slate-600">Target: ₹${goal.target_amount.toLocaleString()} by ${goal.target_date}</p>
+                                            </div>
+                                            <span class="px-3 py-1 rounded-full text-sm font-semibold ${goal.on_track ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}">${statusText}</span>
+                                        </div>
+                                        <div class="mt-2">
+                                            <p class="text-sm"><strong>Monthly Required:</strong> ₹${goal.monthly_required.toLocaleString()}</p>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+
+                // AI-Driven Plan Section
+                const aiPlan = result.ai_driven_plan;
+                html += `
+                    <div class="bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-lg border border-purple-200">
+                        <h2 class="text-2xl font-bold text-slate-800 mb-4">🤖 AI-Driven Financial Plan</h2>
+                        
+                        <!-- Executive Summary -->
+                        <div class="mb-6 p-4 bg-white rounded-md shadow-sm">
+                            <h3 class="text-lg font-semibold text-slate-800 mb-2">📋 Executive Summary</h3>
+                            <p class="text-slate-700 leading-relaxed">${aiPlan.executive_summary}</p>
+                        </div>
+
+                        <!-- Quick Wins -->
+                        <div class="mb-6 p-4 bg-white rounded-md shadow-sm">
+                            <h3 class="text-lg font-semibold text-slate-800 mb-3">⚡ Quick Wins</h3>
+                            <ul class="space-y-2">
+                                ${aiPlan.quick_wins.map(win => `<li class="flex items-start"><span class="text-green-500 mr-2">✓</span><span class="text-slate-700">${win}</span></li>`).join('')}
+                            </ul>
+                        </div>
+
+                        <!-- Debt Repayment Plan -->
+                        <div class="mb-6 p-4 bg-white rounded-md shadow-sm">
+                            <h3 class="text-lg font-semibold text-slate-800 mb-3">💳 Debt Repayment Strategy</h3>
+                            <div class="mb-3">
+                                <h4 class="font-semibold text-slate-700">${aiPlan.debt_repayment_plan.strategy_name}</h4>
+                                <p class="text-slate-600 mt-1">${aiPlan.debt_repayment_plan.recommendation}</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-slate-700 mb-2">Action Steps:</h4>
+                                <ol class="space-y-1">
+                                    ${aiPlan.debt_repayment_plan.steps.map(step => `<li class="text-slate-700">${step}</li>`).join('')}
+                                </ol>
+                            </div>
+                        </div>
+
+                        <!-- Investment Strategy -->
+                        <div class="mb-6 p-4 bg-white rounded-md shadow-sm">
+                            <h3 class="text-lg font-semibold text-slate-800 mb-3">📈 Investment Strategy</h3>
+                            <div class="text-slate-700 leading-relaxed whitespace-pre-line">${aiPlan.investment_strategy}</div>
+                        </div>
+
+                        <!-- Disclaimer -->
+                        <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+                            <p class="text-sm text-yellow-800"><strong>⚠️ Disclaimer:</strong> ${aiPlan.disclaimer}</p>
+                        </div>
+                    </div>
+                `;
+
+                html += '</div>';
+                responseContainer.innerHTML = html;
+            };
+        });
+    </script>
+</body>
+</html>
