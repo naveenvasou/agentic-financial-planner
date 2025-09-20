@@ -2,7 +2,9 @@ from fastapi import FastAPI
 from pydantic import BaseModel, Field, conlist
 from typing import Literal
 from datetime import date
+from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
+from .advisor import generate_ai_plan
 
 class Goal(BaseModel):
     goal_name: str = Field(..., description="Name of the goal (e.g., 'Retirement', 'Home Down Payment').")
@@ -16,6 +18,8 @@ class FinancialPlanInput(BaseModel):
     total_liabilities: float = Field(..., description="Total value of all liabilities (e.g., loans, credit card debt).", ge=0)
     goals: conlist(Goal, min_length=0) = Field(..., description="A list of the user's financial goals.")
     risk_profile: Literal["conservative", "moderate", "aggressive"] = Field(..., description="The user's general risk tolerance.")
+    employment_status: Literal["employed", "self-employed", "student", "unemployed"]
+    number_of_dependents: int = Field(..., ge=0)
 
 app = FastAPI(title = "Agentic Financial Planner")
 app.add_middleware(
@@ -26,11 +30,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.post("/generate-plan")
 def generate_plan(plan_data: FinancialPlanInput):
     
     monthly_savings = plan_data.monthly_net_income - plan_data.monthly_expenses
+    net_worth = plan_data.total_assets - plan_data.total_liabilities
+    debt_to_asset_ratio = plan_data.total_liabilities / plan_data.total_assets if plan_data.total_assets > 0 else 0
+    
     remaining_savings = monthly_savings
+    expected_annual_return = {
+    "conservative": 0.06,  # 6%
+    "moderate": 0.08,      # 8% 
+    "aggressive": 0.10     # 10%
+    }  
+    rate = expected_annual_return[plan_data.risk_profile]
+    monthly_rate = rate / 12 
+    
     processed_goals = []
     today = date.today()
     total_monthly_required = 0
@@ -42,9 +58,9 @@ def generate_plan(plan_data: FinancialPlanInput):
             monthly_required = goal.target_amount  # Treat as an immediate lump sum required
         else:
             months_until_target = (goal.target_date.year - today.year) * 12 + (goal.target_date.month - today.month)
-            if months_until_target == 0:
-                months_until_target = 1
-            monthly_required = goal.target_amount / months_until_target
+            if months_until_target > 0:
+                factor = ((1 + monthly_rate) ** months_until_target - 1) / monthly_rate
+                monthly_required = goal.target_amount / factor
         
         # 3. Flag goal as on_track
         on_track = remaining_savings >= monthly_required
@@ -60,22 +76,31 @@ def generate_plan(plan_data: FinancialPlanInput):
     
     recommendations = []
     
-    if monthly_savings <= 0:
-        recommendations.append("Your expenses exceed income. Reduce discretionary spending immediately.")
-    if monthly_savings > 0 and monthly_savings < total_monthly_required:
-        recommendations.append("Your current savings are not enough to meet all goals. Either reduce expenses or prioritize high-priority goals.")
-    if plan_data.total_liabilities > plan_data.total_assets:
-        recommendations.append("Your liabilities exceed your assets. Focus on debt repayment before aggressive investing.")
-    if monthly_savings >= total_monthly_required:
-        recommendations.append("You are on track to meet your financial goals with your current savings rate.")
-    recommendations.append("Maintain an emergency fund of 3-6 months expenses.")
+    financial_summary_data = {
+        "monthly_net_income": plan_data.monthly_net_income,
+        "monthly_expenses": plan_data.monthly_expenses,
+        "monthly_savings": monthly_savings,
+        "total_assets": plan_data.total_assets,
+        "total_liabilities": plan_data.total_liabilities,
+        "net_worth": net_worth,
+        "debt_to_asset_ratio": round(debt_to_asset_ratio, 2),
+        "risk_profile": plan_data.risk_profile,
+        "employment_status": plan_data.employment_status,
+        "number_of_dependents": plan_data.number_of_dependents
+    }
+    
+    ai_plan = generate_ai_plan(financial_summary_data, processed_goals)
     
     return {
-        "cashflow": {
-            "monthly_net_income": plan_data.monthly_net_income,
-            "monthly_expenses": plan_data.monthly_expenses,
-            "monthly_savings": round(monthly_savings, 2)
+        "financial_summary": {
+            "net_worth": round(net_worth, 2),
+            "cashflow": {
+                "monthly_net_income": plan_data.monthly_net_income,
+                "monthly_expenses": plan_data.monthly_expenses,
+                "monthly_savings": round(monthly_savings, 2)
+            },
+            "debt_to_asset_ratio": round(debt_to_asset_ratio, 2)
         },
         "goals_status": processed_goals,
-        "recommendations": recommendations
+        "ai_driven_plan": ai_plan
     }
