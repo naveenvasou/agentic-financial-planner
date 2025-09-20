@@ -3,86 +3,487 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Financial Planner Client</title>
+    <title>Premium AI Financial Planner</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-dark: #0f172a;
+            --secondary-dark: #1e293b;
+            --accent-gold: #f59e0b;
+            --success-green: #10b981;
+            --danger-red: #ef4444;
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+        }
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
         body {
-            font-family: sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(245, 158, 11, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 40% 60%, rgba(59, 130, 246, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        
+        .glass-input {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #f8fafc;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        
+        .glass-input:focus {
+            outline: none;
+            border-color: var(--accent-gold);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 
+                0 0 20px rgba(245, 158, 11, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+        
+        .glass-input::placeholder {
+            color: rgba(248, 250, 252, 0.5);
+        }
+        
+        .premium-button {
+            background: linear-gradient(135deg, var(--accent-gold) 0%, #d97706 100%);
+            border: none;
+            border-radius: 12px;
+            color: #0f172a;
+            font-weight: 700;
+            font-size: 1rem;
+            padding: 16px 32px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 4px 15px rgba(245, 158, 11, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+        
+        .premium-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s;
+        }
+        
+        .premium-button:hover::before {
+            left: 100%;
+        }
+        
+        .premium-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 8px 25px rgba(245, 158, 11, 0.6),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+        
+        .premium-button:active {
+            transform: translateY(0);
+        }
+        
+        .floating-label {
+            position: relative;
+        }
+        
+        .floating-label label {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(15, 23, 42, 0.9);
+            padding: 0 8px;
+            color: rgba(248, 250, 252, 0.7);
+            font-size: 14px;
+            font-weight: 500;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 4px;
+        }
+        
+        .floating-label input:focus + label,
+        .floating-label input:not(:placeholder-shown) + label,
+        .floating-label select:focus + label,
+        .floating-label select:not([value=""]) + label {
+            top: 0;
+            font-size: 12px;
+            color: var(--accent-gold);
+            font-weight: 600;
+        }
+        
+        .goal-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .goal-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-gold), var(--success-green));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .goal-card:hover::before {
+            opacity: 1;
+        }
+        
+        .goal-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(245, 158, 11, 0.3);
+            box-shadow: 
+                0 12px 40px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        
+        .remove-goal-btn {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 8px;
+            color: #ef4444;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .remove-goal-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: #ef4444;
+            transform: scale(1.05);
+        }
+        
+        .add-goal-btn {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 12px;
+            color: var(--success-green);
+            font-weight: 600;
+            padding: 12px 24px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .add-goal-btn:hover {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: var(--success-green);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(245, 158, 11, 0.3);
+            border-top: 3px solid var(--accent-gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .pulse-glow {
+            animation: pulseGlow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes pulseGlow {
+            from {
+                box-shadow: 
+                    0 8px 32px rgba(0, 0, 0, 0.3),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            }
+            to {
+                box-shadow: 
+                    0 8px 32px rgba(0, 0, 0, 0.3),
+                    0 0 20px rgba(245, 158, 11, 0.2),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            }
+        }
+        
+        .metric-card {
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .metric-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .metric-card:hover::after {
+            opacity: 1;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(245, 158, 11, 0.2);
+        }
+        
+        .slide-in {
+            animation: slideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .title-glow {
+            background: linear-gradient(135deg, #f8fafc, var(--accent-gold));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 200% 200%;
+            animation: gradientShift 3s ease-in-out infinite;
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .security-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 12px;
+            color: var(--success-green);
+            font-weight: 600;
+        }
+        
+        select.glass-input {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23f59e0b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 12px center;
+            background-repeat: no-repeat;
+            background-size: 16px;
+            appearance: none;
+            padding-right: 40px;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        
+        .status-success {
+            background: var(--success-green);
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+        
+        .status-warning {
+            background: var(--accent-gold);
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+        }
+        
+        .status-danger {
+            background: var(--danger-red);
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
         }
     </style>
 </head>
-<body class="bg-slate-100 p-4">
-    <div class="max-w-4xl mx-auto p-6 bg-white rounded-xl shadow-lg">
-        <h1 class="text-3xl font-bold mb-6 text-center text-slate-800">AI Financial Planner</h1>
-
-        <form id="financial-form" class="space-y-6">
-            <!-- Main Financial Inputs -->
-            <div class="grid md:grid-cols-2 gap-4">
-                <div>
-                    <label for="monthly_net_income" class="block text-sm font-medium text-slate-700">Monthly Net Income (₹)</label>
-                    <input type="number" id="monthly_net_income" name="monthly_net_income" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm" required min="0" step="0.01">
-                </div>
-                <div>
-                    <label for="monthly_expenses" class="block text-sm font-medium text-slate-700">Monthly Expenses (₹)</label>
-                    <input type="number" id="monthly_expenses" name="monthly_expenses" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm" required min="0" step="0.01">
-                </div>
-                <div>
-                    <label for="total_assets" class="block text-sm font-medium text-slate-700">Total Assets (₹)</label>
-                    <input type="number" id="total_assets" name="total_assets" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm" required min="0" step="0.01">
-                </div>
-                <div>
-                    <label for="total_liabilities" class="block text-sm font-medium text-slate-700">Total Liabilities (₹)</label>
-                    <input type="number" id="total_liabilities" name="total_liabilities" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm" required min="0" step="0.01">
-                </div>
+<body class="p-4 text-white">
+    <div class="max-w-6xl mx-auto relative">
+        <!-- Security Badge -->
+        <div class="security-badge">
+            🔒 Bank-Grade Security
+        </div>
+        
+        <!-- Main Container -->
+        <div class="glass-card p-8 pulse-glow">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl md:text-5xl font-black mb-4 title-glow">
+                    AI Financial Planner
+                </h1>
+                <p class="text-slate-300 text-lg font-medium">
+                    Advanced algorithmic wealth optimization powered by artificial intelligence
+                </p>
+                <div class="w-24 h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent mx-auto mt-4"></div>
             </div>
 
-            <!-- Additional Personal Info -->
-            <div class="grid md:grid-cols-2 gap-4">
-                <div>
-                    <label for="employment_status" class="block text-sm font-medium text-slate-700">Employment Status</label>
-                    <select id="employment_status" name="employment_status" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm" required>
-                        <option value="" disabled selected>Select employment status</option>
-                        <option value="employed">Employed</option>
-                        <option value="self-employed">Self-Employed</option>
-                        <option value="student">Student</option>
-                        <option value="unemployed">Unemployed</option>
-                    </select>
+            <form id="financial-form" class="space-y-8">
+                <!-- Financial Metrics Section -->
+                <div class="space-y-6">
+                    <h2 class="text-2xl font-bold text-slate-100 flex items-center">
+                        <span class="w-8 h-8 bg-gradient-to-r from-amber-400 to-orange-500 rounded-lg flex items-center justify-center mr-3 text-slate-900 font-black">₹</span>
+                        Financial Metrics
+                    </h2>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="floating-label">
+                            <input type="number" id="monthly_net_income" name="monthly_net_income" 
+                                   class="glass-input w-full p-4 text-lg" required min="0" step="0.01" placeholder=" ">
+                            <label>Monthly Net Income (₹)</label>
+                        </div>
+                        <div class="floating-label">
+                            <input type="number" id="monthly_expenses" name="monthly_expenses" 
+                                   class="glass-input w-full p-4 text-lg" required min="0" step="0.01" placeholder=" ">
+                            <label>Monthly Expenses (₹)</label>
+                        </div>
+                        <div class="floating-label">
+                            <input type="number" id="total_assets" name="total_assets" 
+                                   class="glass-input w-full p-4 text-lg" required min="0" step="0.01" placeholder=" ">
+                            <label>Total Assets (₹)</label>
+                        </div>
+                        <div class="floating-label">
+                            <input type="number" id="total_liabilities" name="total_liabilities" 
+                                   class="glass-input w-full p-4 text-lg" required min="0" step="0.01" placeholder=" ">
+                            <label>Total Liabilities (₹)</label>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <label for="number_of_dependents" class="block text-sm font-medium text-slate-700">Number of Dependents</label>
-                    <input type="number" id="number_of_dependents" name="number_of_dependents" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm" required min="0" value="0">
+
+                <!-- Personal Profile Section -->
+                <div class="space-y-6">
+                    <h2 class="text-2xl font-bold text-slate-100 flex items-center">
+                        <span class="w-8 h-8 bg-gradient-to-r from-green-400 to-emerald-500 rounded-lg flex items-center justify-center mr-3 text-slate-900 font-black">👤</span>
+                        Personal Profile
+                    </h2>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="floating-label">
+                            <select id="employment_status" name="employment_status" class="glass-input w-full p-4 text-lg" required value="">
+                                <option value="" disabled selected hidden></option>
+                                <option value="employed">Employed</option>
+                                <option value="self-employed">Self-Employed</option>
+                                <option value="student">Student</option>
+                                <option value="unemployed">Unemployed</option>
+                            </select>
+                            <label>Employment Status</label>
+                        </div>
+                        <div class="floating-label">
+                            <input type="number" id="number_of_dependents" name="number_of_dependents" 
+                                   class="glass-input w-full p-4 text-lg" required min="0" value="0" placeholder=" ">
+                            <label>Number of Dependents</label>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Financial Goals Section -->
+                <div class="space-y-6">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-2xl font-bold text-slate-100 flex items-center">
+                            <span class="w-8 h-8 bg-gradient-to-r from-blue-400 to-cyan-500 rounded-lg flex items-center justify-center mr-3 text-slate-900 font-black">🎯</span>
+                            Financial Goals
+                        </h2>
+                        <button type="button" id="add-goal-btn" class="add-goal-btn">
+                            + Add Goal
+                        </button>
+                    </div>
+                    <div id="goals-container" class="space-y-6">
+                        <!-- Goal fields will be added here dynamically -->
+                    </div>
+                </div>
+
+                <!-- Risk Assessment Section -->
+                <div class="space-y-6">
+                    <h2 class="text-2xl font-bold text-slate-100 flex items-center">
+                        <span class="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-500 rounded-lg flex items-center justify-center mr-3 text-slate-900 font-black">📊</span>
+                        Risk Assessment
+                    </h2>
+                    
+                    <div class="floating-label">
+                        <select id="risk_profile" name="risk_profile" class="glass-input w-full p-4 text-lg" required value="">
+                            <option value="" disabled selected hidden></option>
+                            <option value="conservative">Conservative (6% expected returns)</option>
+                            <option value="moderate">Moderate (8% expected returns)</option>
+                            <option value="aggressive">Aggressive (10% expected returns)</option>
+                        </select>
+                        <label>Risk Profile</label>
+                    </div>
+                </div>
+
+                <button type="submit" class="premium-button w-full text-xl font-black">
+                    🤖 Generate AI Financial Plan
+                </button>
+            </form>
+
+            <!-- Response Display Area -->
+            <div id="response-container" class="mt-12 hidden">
+                <!-- Response content will be inserted here -->
             </div>
-
-            <!-- Goals Section -->
-            <div class="space-y-4">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-xl font-semibold text-slate-800">Financial Goals</h2>
-                    <button type="button" id="add-goal-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md shadow-sm hover:bg-blue-700 transition-colors">+ Add Goal</button>
-                </div>
-                <div id="goals-container" class="space-y-4">
-                    <!-- Goal fields will be added here dynamically -->
-                </div>
-            </div>
-
-            <!-- Risk Profile -->
-            <div>
-                <label for="risk_profile" class="block text-sm font-medium text-slate-700">Risk Profile</label>
-                <select id="risk_profile" name="risk_profile" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm" required>
-                    <option value="" disabled selected>Select a profile</option>
-                    <option value="conservative">Conservative (6% expected returns)</option>
-                    <option value="moderate">Moderate (8% expected returns)</option>
-                    <option value="aggressive">Aggressive (10% expected returns)</option>
-                </select>
-            </div>
-
-            <button type="submit" class="w-full p-3 bg-slate-800 text-white rounded-md shadow-lg font-bold hover:bg-slate-700 transition-colors">Generate AI Financial Plan</button>
-        </form>
-
-        <!-- Response Display Area -->
-        <div id="response-container" class="mt-8 hidden">
-            <!-- Response content will be inserted here -->
         </div>
     </div>
 
@@ -97,38 +498,57 @@
 
             const addGoalFields = () => {
                 const goalDiv = document.createElement('div');
-                goalDiv.className = 'goal-item p-4 border-2 border-slate-200 rounded-md space-y-3 bg-slate-50';
+                goalDiv.className = 'goal-card p-6 slide-in';
                 goalDiv.innerHTML = `
-                    <div class="flex justify-between items-center">
-                        <h3 class="font-semibold text-slate-700">Goal ${goalCounter + 1}</h3>
-                        <button type="button" class="remove-goal text-red-600 hover:text-red-800 font-bold">✕ Remove</button>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold text-amber-400 flex items-center">
+                            <span class="w-6 h-6 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full flex items-center justify-center mr-2 text-xs text-slate-900 font-black">${goalCounter + 1}</span>
+                            Financial Goal
+                        </h3>
+                        <button type="button" class="remove-goal-btn">✕ Remove</button>
                     </div>
-                    <div class="grid md:grid-cols-3 gap-3">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700">Goal Name</label>
-                            <input type="text" name="goal_name_${goalCounter}" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm" required placeholder="e.g., Emergency Fund">
+                    <div class="grid md:grid-cols-3 gap-4">
+                        <div class="floating-label">
+                            <input type="text" name="goal_name_${goalCounter}" class="glass-input w-full p-3" required placeholder=" ">
+                            <label>Goal Name</label>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700">Target Amount (₹)</label>
-                            <input type="number" name="target_amount_${goalCounter}" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm" required min="0" step="0.01">
+                        <div class="floating-label">
+                            <input type="number" name="target_amount_${goalCounter}" class="glass-input w-full p-3" required min="0" step="0.01" placeholder=" ">
+                            <label>Target Amount (₹)</label>
                         </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700">Target Date</label>
-                            <input type="date" name="target_date_${goalCounter}" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm" required>
+                        <div class="floating-label">
+                            <input type="date" name="target_date_${goalCounter}" class="glass-input w-full p-3" required placeholder=" ">
+                            <label>Target Date</label>
                         </div>
                     </div>
                 `;
                 
                 // Add remove functionality
-                const removeBtn = goalDiv.querySelector('.remove-goal');
+                const removeBtn = goalDiv.querySelector('.remove-goal-btn');
                 removeBtn.addEventListener('click', () => {
-                    goalDiv.remove();
+                    goalDiv.style.animation = 'slideOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards';
+                    setTimeout(() => goalDiv.remove(), 300);
                 });
                 
                 goalsContainer.appendChild(goalDiv);
                 goalCounter++;
             };
+
+            // Add slideOut animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideOut {
+                    from {
+                        opacity: 1;
+                        transform: translateX(0);
+                    }
+                    to {
+                        opacity: 0;
+                        transform: translateX(20px);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
 
             // Add an initial goal field on page load
             addGoalFields();
@@ -138,8 +558,15 @@
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
 
-                // Show loading
-                responseContainer.innerHTML = '<div class="text-center p-8"><div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800"></div><p class="mt-2 text-slate-600">Generating your AI financial plan...</p></div>';
+                // Show premium loading
+                responseContainer.innerHTML = `
+                    <div class="glass-card p-12 text-center fade-in">
+                        <div class="loading-spinner mx-auto mb-6"></div>
+                        <h3 class="text-2xl font-bold text-amber-400 mb-2">AI Processing Your Data</h3>
+                        <p class="text-slate-300">Advanced algorithms are analyzing your financial profile...</p>
+                        <div class="w-32 h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent mx-auto mt-4"></div>
+                    </div>
+                `;
                 responseContainer.classList.remove('hidden');
 
                 const formData = new FormData(form);
@@ -155,7 +582,7 @@
                 };
 
                 // Collect dynamic goal data
-                const goalItems = goalsContainer.querySelectorAll('.goal-item');
+                const goalItems = goalsContainer.querySelectorAll('.goal-card');
                 goalItems.forEach((goalItem, index) => {
                     const goalName = goalItem.querySelector(`[name^="goal_name_"]`).value;
                     const targetAmount = parseFloat(goalItem.querySelector(`[name^="target_amount_"]`).value);
@@ -184,37 +611,60 @@
                     }
 
                     const result = await response.json();
-                    renderResponse(result);
+                    setTimeout(() => renderResponse(result), 1000); // Delay for premium feel
                 } catch (error) {
-                    responseContainer.innerHTML = `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"><strong>Error:</strong> ${error.message}</div>`;
+                    responseContainer.innerHTML = `
+                        <div class="glass-card p-8 fade-in" style="border: 1px solid rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.05);">
+                            <div class="flex items-center">
+                                <span class="status-danger mr-3"></span>
+                                <div>
+                                    <h3 class="text-lg font-bold text-red-400">Connection Error</h3>
+                                    <p class="text-slate-300">${error.message}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
                     console.error('Fetch error:', error);
                 }
             });
 
             const renderResponse = (result) => {
                 if (!result || !result.financial_summary || !result.goals_status || !result.ai_driven_plan) {
-                    responseContainer.innerHTML = '<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">Error: Invalid response format from API</div>';
+                    responseContainer.innerHTML = `
+                        <div class="glass-card p-8 fade-in" style="border: 1px solid rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.05);">
+                            <div class="flex items-center">
+                                <span class="status-danger mr-3"></span>
+                                <div>
+                                    <h3 class="text-lg font-bold text-red-400">Invalid Response</h3>
+                                    <p class="text-slate-300">Error: Invalid response format from API</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
                     return;
                 }
                 
-                let html = '<div class="space-y-6">';
+                let html = '<div class="space-y-8 fade-in">';
                 
                 // Financial Summary Section
                 html += `
-                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-200">
-                        <h2 class="text-2xl font-bold text-slate-800 mb-4">📊 Financial Summary</h2>
-                        <div class="grid md:grid-cols-3 gap-4">
-                            <div class="text-center p-4 bg-white rounded-md shadow-sm">
-                                <h3 class="text-sm font-semibold text-slate-600 mb-1">Net Worth</h3>
-                                <p class="text-2xl font-bold ${result.financial_summary.net_worth >= 0 ? 'text-green-600' : 'text-red-600'}">₹${result.financial_summary.net_worth.toLocaleString()}</p>
+                    <div class="glass-card p-8" style="background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2);">
+                        <h2 class="text-3xl font-bold text-amber-400 mb-6 flex items-center">
+                            <span class="w-10 h-10 bg-gradient-to-r from-amber-400 to-orange-500 rounded-xl flex items-center justify-center mr-4 text-slate-900 font-black">📊</span>
+                            Financial Dashboard
+                        </h2>
+                        <div class="grid md:grid-cols-3 gap-6">
+                            <div class="metric-card p-6 text-center">
+                                <h3 class="text-sm font-semibold text-slate-400 mb-3">NET WORTH</h3>
+                                <p class="text-3xl font-black ${result.financial_summary.net_worth >= 0 ? 'text-green-400' : 'text-red-400'} mb-2">₹${result.financial_summary.net_worth.toLocaleString()}</p>
+                                <span class="status-indicator ${result.financial_summary.cashflow.monthly_savings >= 0 ? 'status-success' : 'status-danger'}"></span>
+                                <span class="text-xs text-slate-500 uppercase font-bold">${result.financial_summary.cashflow.monthly_savings >= 0 ? 'Surplus' : 'Deficit'}</span>
                             </div>
-                            <div class="text-center p-4 bg-white rounded-md shadow-sm">
-                                <h3 class="text-sm font-semibold text-slate-600 mb-1">Monthly Savings</h3>
-                                <p class="text-2xl font-bold ${result.financial_summary.cashflow.monthly_savings >= 0 ? 'text-green-600' : 'text-red-600'}">₹${result.financial_summary.cashflow.monthly_savings.toLocaleString()}</p>
-                            </div>
-                            <div class="text-center p-4 bg-white rounded-md shadow-sm">
-                                <h3 class="text-sm font-semibold text-slate-600 mb-1">Debt-to-Asset Ratio</h3>
-                                <p class="text-2xl font-bold ${result.financial_summary.debt_to_asset_ratio <= 0.3 ? 'text-green-600' : result.financial_summary.debt_to_asset_ratio <= 0.5 ? 'text-yellow-600' : 'text-red-600'}">${(result.financial_summary.debt_to_asset_ratio * 100).toFixed(1)}%</p>
+                            <div class="metric-card p-6 text-center">
+                                <h3 class="text-sm font-semibold text-slate-400 mb-3">DEBT-TO-ASSET RATIO</h3>
+                                <p class="text-3xl font-black ${result.financial_summary.debt_to_asset_ratio <= 0.3 ? 'text-green-400' : result.financial_summary.debt_to_asset_ratio <= 0.5 ? 'text-amber-400' : 'text-red-400'} mb-2">${(result.financial_summary.debt_to_asset_ratio * 100).toFixed(1)}%</p>
+                                <span class="status-indicator ${result.financial_summary.debt_to_asset_ratio <= 0.3 ? 'status-success' : result.financial_summary.debt_to_asset_ratio <= 0.5 ? 'status-warning' : 'status-danger'}"></span>
+                                <span class="text-xs text-slate-500 uppercase font-bold">${result.financial_summary.debt_to_asset_ratio <= 0.3 ? 'Excellent' : result.financial_summary.debt_to_asset_ratio <= 0.5 ? 'Fair' : 'High Risk'}</span>
                             </div>
                         </div>
                     </div>
@@ -222,24 +672,35 @@
 
                 // Goals Status Section
                 html += `
-                    <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
-                        <h2 class="text-2xl font-bold text-slate-800 mb-4">🎯 Goals Status</h2>
+                    <div class="glass-card p-8" style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2);">
+                        <h2 class="text-3xl font-bold text-green-400 mb-6 flex items-center">
+                            <span class="w-10 h-10 bg-gradient-to-r from-green-400 to-emerald-500 rounded-xl flex items-center justify-center mr-4 text-slate-900 font-black">🎯</span>
+                            Goals Analysis
+                        </h2>
                         <div class="space-y-4">
                             ${result.goals_status.map(goal => {
-                                const statusColor = goal.on_track ? 'border-green-400 bg-green-50' : 'border-red-400 bg-red-50';
+                                const statusColor = goal.on_track ? 'border-green-400/30 bg-green-400/5' : 'border-red-400/30 bg-red-400/5';
                                 const statusIcon = goal.on_track ? '✅' : '⚠️';
                                 const statusText = goal.on_track ? 'On Track' : 'Needs Attention';
+                                const statusIndicator = goal.on_track ? 'status-success' : 'status-danger';
+                                
                                 return `
-                                    <div class="p-4 rounded-md border-2 ${statusColor}">
-                                        <div class="flex justify-between items-start">
+                                    <div class="goal-card p-6 ${statusColor}" style="border: 1px solid;">
+                                        <div class="flex justify-between items-start mb-4">
                                             <div>
-                                                <h3 class="font-bold text-lg text-slate-800">${statusIcon} ${goal.goal_name}</h3>
-                                                <p class="text-sm text-slate-600">Target: ₹${goal.target_amount.toLocaleString()} by ${goal.target_date}</p>
+                                                <h3 class="text-xl font-bold text-slate-100 flex items-center mb-2">
+                                                    <span class="text-2xl mr-3">${statusIcon}</span>
+                                                    ${goal.goal_name}
+                                                </h3>
+                                                <p class="text-slate-400">Target: <span class="text-amber-400 font-semibold">₹${goal.target_amount.toLocaleString()}</span> by <span class="text-blue-400 font-semibold">${goal.target_date}</span></p>
                                             </div>
-                                            <span class="px-3 py-1 rounded-full text-sm font-semibold ${goal.on_track ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}">${statusText}</span>
+                                            <div class="text-right">
+                                                <span class="status-indicator ${statusIndicator} mb-2"></span>
+                                                <div class="px-4 py-2 rounded-full text-sm font-bold ${goal.on_track ? 'bg-green-400/20 text-green-400' : 'bg-red-400/20 text-red-400'}">${statusText}</div>
+                                            </div>
                                         </div>
-                                        <div class="mt-2">
-                                            <p class="text-sm"><strong>Monthly Required:</strong> ₹${goal.monthly_required.toLocaleString()}</p>
+                                        <div class="bg-slate-800/50 p-4 rounded-lg">
+                                            <p class="text-slate-300"><span class="text-amber-400 font-semibold">Monthly Required:</span> ₹${goal.monthly_required.toLocaleString()}</p>
                                         </div>
                                     </div>
                                 `;
@@ -251,54 +712,117 @@
                 // AI-Driven Plan Section
                 const aiPlan = result.ai_driven_plan;
                 html += `
-                    <div class="bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-lg border border-purple-200">
-                        <h2 class="text-2xl font-bold text-slate-800 mb-4">🤖 AI-Driven Financial Plan</h2>
+                    <div class="glass-card p-8" style="background: rgba(147, 51, 234, 0.05); border: 1px solid rgba(147, 51, 234, 0.2);">
+                        <h2 class="text-3xl font-bold text-purple-400 mb-6 flex items-center">
+                            <span class="w-10 h-10 bg-gradient-to-r from-purple-400 to-pink-500 rounded-xl flex items-center justify-center mr-4 text-slate-900 font-black">🤖</span>
+                            AI-Generated Financial Strategy
+                        </h2>
                         
                         <!-- Executive Summary -->
-                        <div class="mb-6 p-4 bg-white rounded-md shadow-sm">
-                            <h3 class="text-lg font-semibold text-slate-800 mb-2">📋 Executive Summary</h3>
-                            <p class="text-slate-700 leading-relaxed">${aiPlan.executive_summary}</p>
+                        <div class="glass-card p-6 mb-6" style="background: rgba(255, 255, 255, 0.03);">
+                            <h3 class="text-xl font-bold text-slate-100 mb-4 flex items-center">
+                                <span class="w-6 h-6 bg-gradient-to-r from-blue-400 to-cyan-500 rounded-lg flex items-center justify-center mr-3 text-slate-900 text-sm font-black">📋</span>
+                                Executive Summary
+                            </h3>
+                            <p class="text-slate-300 leading-relaxed text-lg">${aiPlan.executive_summary}</p>
                         </div>
 
                         <!-- Quick Wins -->
-                        <div class="mb-6 p-4 bg-white rounded-md shadow-sm">
-                            <h3 class="text-lg font-semibold text-slate-800 mb-3">⚡ Quick Wins</h3>
-                            <ul class="space-y-2">
-                                ${aiPlan.quick_wins.map(win => `<li class="flex items-start"><span class="text-green-500 mr-2">✓</span><span class="text-slate-700">${win}</span></li>`).join('')}
-                            </ul>
+                        <div class="glass-card p-6 mb-6" style="background: rgba(255, 255, 255, 0.03);">
+                            <h3 class="text-xl font-bold text-slate-100 mb-4 flex items-center">
+                                <span class="w-6 h-6 bg-gradient-to-r from-green-400 to-emerald-500 rounded-lg flex items-center justify-center mr-3 text-slate-900 text-sm font-black">⚡</span>
+                                Quick Wins
+                            </h3>
+                            <div class="space-y-3">
+                                ${aiPlan.quick_wins.map(win => `
+                                    <div class="flex items-start p-3 bg-green-400/10 rounded-lg border border-green-400/20">
+                                        <span class="text-green-400 mr-3 mt-1">✓</span>
+                                        <span class="text-slate-300 leading-relaxed">${win}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
                         </div>
 
                         <!-- Debt Repayment Plan -->
-                        <div class="mb-6 p-4 bg-white rounded-md shadow-sm">
-                            <h3 class="text-lg font-semibold text-slate-800 mb-3">💳 Debt Repayment Strategy</h3>
-                            <div class="mb-3">
-                                <h4 class="font-semibold text-slate-700">${aiPlan.debt_repayment_plan.strategy_name}</h4>
-                                <p class="text-slate-600 mt-1">${aiPlan.debt_repayment_plan.recommendation}</p>
+                        <div class="glass-card p-6 mb-6" style="background: rgba(255, 255, 255, 0.03);">
+                            <h3 class="text-xl font-bold text-slate-100 mb-4 flex items-center">
+                                <span class="w-6 h-6 bg-gradient-to-r from-red-400 to-pink-500 rounded-lg flex items-center justify-center mr-3 text-slate-900 text-sm font-black">💳</span>
+                                Debt Optimization Strategy
+                            </h3>
+                            <div class="mb-4 p-4 bg-amber-400/10 rounded-lg border border-amber-400/20">
+                                <h4 class="font-bold text-amber-400 text-lg mb-2">${aiPlan.debt_repayment_plan.strategy_name}</h4>
+                                <p class="text-slate-300 leading-relaxed">${aiPlan.debt_repayment_plan.recommendation}</p>
                             </div>
                             <div>
-                                <h4 class="font-semibold text-slate-700 mb-2">Action Steps:</h4>
-                                <ol class="space-y-1">
-                                    ${aiPlan.debt_repayment_plan.steps.map(step => `<li class="text-slate-700">${step}</li>`).join('')}
-                                </ol>
+                                <h4 class="font-bold text-slate-200 mb-3">Implementation Steps:</h4>
+                                <div class="space-y-2">
+                                    ${aiPlan.debt_repayment_plan.steps.map((step, index) => `
+                                        <div class="flex items-start p-3 bg-slate-800/30 rounded-lg">
+                                            <span class="w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3 mt-0.5">${index + 1}</span>
+                                            <span class="text-slate-300 leading-relaxed">${step}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
                             </div>
                         </div>
 
                         <!-- Investment Strategy -->
-                        <div class="mb-6 p-4 bg-white rounded-md shadow-sm">
-                            <h3 class="text-lg font-semibold text-slate-800 mb-3">📈 Investment Strategy</h3>
-                            <div class="text-slate-700 leading-relaxed whitespace-pre-line">
-                                ${marked.parse(aiPlan.investment_strategy)}
+                        <div class="glass-card p-6 mb-6" style="background: rgba(255, 255, 255, 0.03);">
+                            <h3 class="text-xl font-bold text-slate-100 mb-4 flex items-center">
+                                <span class="w-6 h-6 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-lg flex items-center justify-center mr-3 text-slate-900 text-sm font-black">📈</span>
+                                Investment Portfolio Strategy
+                            </h3>
+                            <div class="prose prose-invert prose-lg max-w-none">
+                                <div class="text-slate-300 leading-relaxed investment-content">
+                                    ${marked.parse(aiPlan.investment_strategy)}
                                 </div>
+                            </div>
                         </div>
 
                         <!-- Disclaimer -->
-                        <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-                            <p class="text-sm text-yellow-800"><strong>⚠️ Disclaimer:</strong> ${aiPlan.disclaimer}</p>
+                        <div class="glass-card p-6" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3);">
+                            <div class="flex items-start">
+                                <span class="text-amber-400 text-2xl mr-4">⚠️</span>
+                                <div>
+                                    <h4 class="font-bold text-amber-400 mb-2">Important Disclaimer</h4>
+                                    <p class="text-slate-300 text-sm leading-relaxed">${aiPlan.disclaimer}</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 `;
                 html += '</div>';
-                responseContainer.innerHTML = html;
+                
+                setTimeout(() => {
+                    responseContainer.innerHTML = html;
+                    
+                    // Add custom styling for investment strategy content
+                    const investmentContent = responseContainer.querySelector('.investment-content');
+                    if (investmentContent) {
+                        const headers = investmentContent.querySelectorAll('h1, h2, h3, h4, h5, h6');
+                        headers.forEach(header => {
+                            header.className = 'text-amber-400 font-bold mb-3 mt-6 first:mt-0';
+                        });
+                        
+                        const paragraphs = investmentContent.querySelectorAll('p');
+                        paragraphs.forEach(p => {
+                            p.className = 'mb-4 text-slate-300 leading-relaxed';
+                        });
+                        
+                        const lists = investmentContent.querySelectorAll('ul, ol');
+                        lists.forEach(list => {
+                            list.className = 'mb-4 space-y-2';
+                        });
+                        
+                        const listItems = investmentContent.querySelectorAll('li');
+                        listItems.forEach(li => {
+                            li.className = 'text-slate-300 leading-relaxed flex items-start';
+                            if (li.parentElement.tagName === 'UL') {
+                                li.innerHTML = `<span class="text-green-400 mr-2">•</span>${li.innerHTML}`;
+                            }
+                        });
+                    }
+                }, 500);
             };
         });
     </script>
