@@ -30,31 +30,38 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const resultsDisplay = document.getElementById('results-display');
+        console.log('Page loaded');
+        const responseContainer = document.getElementById('response-container');
+        console.log('Results display element:', responseContainer);
         const storedData = sessionStorage.getItem('financialPlanResult');
-
+        console.log('Stored data:', storedData);
         if (!storedData) {
             // No data found, redirect back to form
-            window.location.href = 'form.html';
-            return;
+            console.log('No data found, redirecting...');
+            //window.location.href = 'index.html';
+            //return;
         }
 
         // Parse the stored data
         let result;
         try {
             result = JSON.parse(storedData);
+            console.log('Parsed result:', result);
         } catch (error) {
             // Invalid data, redirect back
-            window.location.href = 'form.html';
-            return;
+            console.log('Parse error:', error);
+            //window.location.href = 'index.html';
+            //return;
         }
 
         const renderResponse = (result) => {
+            console.log('renderResponse called with:', result);
             if (!result || !result.financial_summary || !result.goals_status || !result.ai_driven_plan) {
+                console.log('Invalid result structure:', result);
                 responseContainer.innerHTML = '<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">Error: Invalid response format from API</div>';
                 return;
             }
-            
+            console.log('Result structure is valid');
             let html = '<div class="space-y-6">';
             
             // Financial Summary Section
@@ -157,8 +164,20 @@
             `;
 
             html += '</div>';
-            resultsDisplay.innerHTML = html;
+            console.log('Generated HTML length:', html.length);
+            console.log('About to set innerHTML');
+            responseContainer.innerHTML = html;
+            console.log('innerHTML set, checking if content exists in DOM');
+            console.log('Results display content:', responseContainer.innerHTML.substring(0, 100));
         };
+        
+        console.log('About to call renderResponse');
+            
+        renderResponse(result);
+        responseContainer.classList.remove('hidden');
+
+        console.log('renderResponse called');
+        
 
     });
     </script>

@@ -181,7 +181,7 @@
 
                     const result = await response.json();
                     sessionStorage.setItem('financialPlanResult', JSON.stringify(result));
-                    window.location.href = 'results.html';
+                    window.location.href = 'result.html';
 
                 } catch (error) {
                     alert('Error generating financial plan: ' + error.message);
